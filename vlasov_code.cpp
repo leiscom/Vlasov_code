@@ -5,23 +5,27 @@
 
 using namespace std;
 
-float p0= 0.5;
-float x0 = 1.0;
+double p0= 0.5; // variable of the intial function waterbag   1/(4*x0*p0)
+double x0 = 1.0;
+
 double x_min = -2.0;
-double x_max = 2.0;
+double x_max = 2.0; // limits of the box
 double p_min = -2.0;
 double p_max = 2.0;
-const int n_x = 100;
-const int n_p = 100;
-double epsilon = 1.0;
-double d_t = 0.01;
+
+const int n_x = 250;
+const int n_p = 250; // number of points in the grid
+
+double epsilon = 1.0; // constant used in the integration (force)
+double d_t = 0.01;// time step of the loop
 
 
 double x_values[n_x];
-double p_values[n_p];
-double force[n_x];
-double main_func[n_x][n_p];
-double func_one[n_x][n_p];
+double p_values[n_p];//array of x and p values
+
+double force[n_x]; // force array
+double main_func[n_x][n_p]; // array that evolves loop by loop
+double func_one[n_x][n_p]; // array use into the loop, are reset and overwrited every loop
 double func_two[n_x][n_p];
 
 
@@ -118,11 +122,12 @@ double sec_drv_p_plus(double func_array[n_x][n_p],int i,int j)
 
 
 //--------------------------------FUNCIONES DEL CUBIC SPLINE-------------------------------------------------
-
+//Cubic spline function in x direction
 double func_csp_x(double func_array[n_x][n_p],double x,int i,int j)
 {
     return Alpha(x,i)*func_array[i][j]+ Beta(x,i)*func_array[(i+1)%n_x][j]+ Gamma(x,i)*sec_drv_x(func_array,i,j) + Delta(x,i)*sec_drv_x_plus(func_array,i,j)   ;
 }
+//Cubic spline function in p direction
 double func_csp_p(double func_array[n_x][n_p],double p,int i,int j)
 {
     return  Alpha(p,j)*func_array[i][j] + Beta(p,j)*func_array[i][(j+1)%n_p] + Gamma(p,j)*sec_drv_p(func_array,i,j) + Delta(p,j)*sec_drv_p_plus(func_array,i,j);
@@ -188,16 +193,18 @@ void integration(double force[n_x],double f[n_x][n_p])
     }
 }
 
-//-----------------------------------FUNCIONES DEL LOOP--------------------------------------------------------
+//-----------------------------------ADVECTIONS--------------------------------------------------------
 
+// advection in x direction using x_values[i] - (p_values[j]*d_t) /2 
 void advection_x(double func_array[n_x][n_p], double func_one[n_x][n_p])
 {
     for (int j = 0; j < n_p; j++) {
         for (int i = 0; i < n_x; i++) {
-            func_one[i][j] = func_csp_x(func_array,x_values[i]-((p_values[j]*d_t)/2),i,j);
+            func_one[i][j] = func_csp_x(func_array,x_values[i]-((p_values[j]*d_t)/2),i,j);//
         }
     }
 }
+// advection in p direction using p_values[j] - (force[i]*d_t) /2
 void advection_p(double func_array[n_x][n_p], double func_one[n_x][n_p],double force[n_x])
 {
     for (int j = 0; j < n_p; j++) {
@@ -218,6 +225,19 @@ void reset(double func[n_x])
 
 
 
+
+
+//---------test--
+void test(double func_array[n_x][n_p], double func_one[n_x][n_p])
+{
+    for (int j = 0; j < n_p; j++) {
+        for (int i = 0; i < n_x; i++) {
+            func_one[i][j] = func_array[i][j];
+        }
+    }
+}
+
+
 //-----------------------------------MAIN--------------------------------------------------------
 
 
@@ -236,36 +256,50 @@ int main()
     //     }
     //     printf("\n");
     // } 
+    printf("main after loop %d \n" );
+        for (int i = 0; i < n_x; i++) {
+            for (int j = 0; j < n_p; j++) {
+            //cout << main_func[(i+1)%n_x][j];
+                printf("%f ", main_func[i][j]);
+        }
+        printf("\n");
+    }   
 
     cout<< main_func[n_x/2][n_p/2]<<endl;
     int loop=0;
-    for(int t = 0; t < 40; t++)
+    for(int t = 0; t < 400; t++)
     {
         advection_x(main_func,func_one);// realiza el primer paso, first advetion in x.
-        reset(force);// resetea el array force
-        integration(force,func_one);// realiza la integracion y la guarda en force
+        test(func_one,main_func);
+        // reset(force);// resetea el array force
+        // integration(force,func_one);// realiza la integracion y la guarda en force
 
-        advection_p(func_one,func_two,force);// realiza el segundo paso, second advetion in p.
+        // advection_p(func_one,func_two,force);// realiza el segundo paso, second advetion in p.
 
-        advection_x(func_two,main_func);// realiza el tercer paso, third advetion in x.
-        cout<<"func_one"<<func_one[n_x/2][n_p/2]<<endl;
-        cout<<"func_two"<<func_two[n_x/2][n_p/2]<<endl;
-        cout<<"main_func"<<main_func[n_x/2][n_p/2]<<endl;
-        loop++;
-        cout<<"---------------loop "<<loop<<endl;
+        // advection_x(func_two,main_func);// realiza el tercer paso, third advetion in x.
+
+        // cout<<"func_one"<<func_one[n_x/2][n_p/2]<<endl;
+        // cout<<"func_two"<<func_two[n_x/2][n_p/2]<<endl;
+        // cout<<"main_func"<<main_func[n_x/2][n_p/2]<<endl;
+        // loop++;
+        // cout<<"---------------loop "<<loop<<endl;
     }
   
 
 
 
-    // printf("main after loop %d \n" ,loop);
-    //  for (int i = 0; i < n_x; i++) {
-    //     for (int j = 0; j < n_p; j++) {
-    //         //cout << main_func[(i+1)%n_x][j];
-    //         printf("%f ", main_func[i][j]);
-    //     }
-    //     printf("\n");
-    // }   
+
+
+    printf("main after loop %d \n" ,loop);
+     for (int i = 0; i < n_x; i++) {
+        for (int j = 0; j < n_p; j++) {
+            //cout << main_func[(i+1)%n_x][j];
+            printf("%f ", func_one[i][j]);
+        }
+        printf("\n");
+    }   
+
+
     // cout<<"v_dxmaxima"<<(x_values[2]-x_values[1])/d_t <<endl;
     // for (int i = 0; i < n_x; i++)
     // {

@@ -152,10 +152,7 @@ double sum_f_sum_b(double fab[n_x][n_p],int k) // k do the function of n-1 in th
     double sum = 0;
     for (int i = 1; i < k; i++)
     {
-        for (int j = 1; j < n_p-1; j++)
-        {
-            sum = sum + (((fab[i][0]+fab[i][n_p-1])*(1/2)) + sum_fxj(fab,i));
-        }
+        sum = sum + (((fab[i][0]+fab[i][n_p-1])*(1/2)) + sum_fxj(fab,i));
     }
     return sum;
 }
@@ -248,24 +245,16 @@ int main()
     init_pvalues();//inicia los valores de p  
     water_bag(main_func);// crea la funcion inicial
         
-    // printf("main_func \n");
-    //  for (int i = 0; i < n_x; i++) {
-    //     for (int j = 0; j < n_p; j++) {
+
+    // printf("main after loop %d \n" );
+    //     for (int i = 0; i < n_x; i++) {
+    //         for (int j = 0; j < n_p; j++) {
     //         //cout << main_func[(i+1)%n_x][j];
-    //         printf("%f ", main_func[i][j]);
+    //             printf("%f ", main_func[i][j]);
     //     }
     //     printf("\n");
-    // } 
-    printf("main after loop %d \n" );
-        for (int i = 0; i < n_x; i++) {
-            for (int j = 0; j < n_p; j++) {
-            //cout << main_func[(i+1)%n_x][j];
-                printf("%f ", main_func[i][j]);
-        }
-        printf("\n");
-    }   
+    // }   
 
-    cout<< main_func[n_x/2][n_p/2]<<endl;
     int loop=0;
     for(int t = 0; t < 400; t++)
     {
@@ -278,11 +267,11 @@ int main()
 
         // advection_x(func_two,main_func);// realiza el tercer paso, third advetion in x.
 
-        // cout<<"func_one"<<func_one[n_x/2][n_p/2]<<endl;
-        // cout<<"func_two"<<func_two[n_x/2][n_p/2]<<endl;
-        // cout<<"main_func"<<main_func[n_x/2][n_p/2]<<endl;
-        // loop++;
-        // cout<<"---------------loop "<<loop<<endl;
+        // // cout<<"func_one"<<func_one[n_x/2][n_p/2]<<endl;
+        // // cout<<"func_two"<<func_two[n_x/2][n_p/2]<<endl;
+        // // cout<<"main_func"<<main_func[n_x/2][n_p/2]<<endl;
+        // // loop++;
+        // // cout<<"---------------loop "<<loop<<endl;
     }
   
 
@@ -300,7 +289,9 @@ int main()
     }   
 
 
-    // cout<<"v_dxmaxima"<<(x_values[2]-x_values[1])/d_t <<endl;
+    // cout<<"v_dxmaxima"<<(x_values[2]-x_values[1])/d_t <<endl; //velocidad maxima permitida en el programa dado Cheng 
+
+
     // for (int i = 0; i < n_x; i++)
     // {
 

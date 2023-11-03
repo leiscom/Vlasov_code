@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -13,8 +14,8 @@ double x_max = 2.0; // limits of the box
 double p_min = -2.0;
 double p_max = 2.0;
 
-const int n_x = 250;
-const int n_p = 250; // number of points in the grid
+const int n_x = 60;
+const int n_p = 60; // number of points in the grid
 
 double epsilon = 1.0; // constant used in the integration (force)
 double d_t = 0.01;// time step of the loop
@@ -162,10 +163,7 @@ double sum_f_sum_a(double fab[n_x][n_p],int k) // k do the function of n-1 in th
     double sum = 0;
     for (int i = k; i < n_x-1; i++)
     {
-        for (int j = 1; j < n_p-1; j++)
-        {
-            sum = sum + (((fab[i][0]+fab[i][n_p-1])*(1/2)) + sum_fxj(fab,i));
-        }
+        sum = sum + (((fab[i][0]+fab[i][n_p-1])*(1/2)) + sum_fxj(fab,i));
     }
     return sum;
 }
@@ -181,11 +179,12 @@ void integration(double force[n_x],double f[n_x][n_p])
 
         if ( k < 2)
         {
-            force[k] = hp*(epsilon)*(hx_b*(-1)*((1/4)*(f[0][0]+f[0][n_p-1]+f[k][0]+f[k][n_p-1])) ) + (hx_a*( (1/4)*(f[k][0]+f[k][n_p-1] + f[n_x-1][k]+f[k][n_p-1]) ));
+            //Debe ser 0 en todos los casos
+            force[k] = hp*(epsilon)*(hx_b*((1/4)*(f[0][0]+f[0][n_p-1]+f[k][0]+f[k][n_p-1])) ) + (-1)*(epsilon)*(hx_a*( (1/4)*(f[k][0]+f[k][n_p-1] + f[n_x-1][k]+f[k][n_p-1]) ));
         }
         else
         {
-            force[k] = (hx_b*hp*( ((1/4)*( f[0][0]+f[0][n_p-1] + 2*sum_fxj(f,0) + f[k][0]+f[k][n_p-1] + sum_fxj(f,k) )) +sum_f_sum_b(f,k)  )) + ( hx_a*hp*( (1/4)*((f[k][0]+f[k][n_p-1]+2*sum_fxj(f,k)) + (f[n_x-1][0]+f[n_x-1][n_p-1]+2*sum_fxj(f,n_x-1))) + sum_f_sum_a(f,k))) ;
+            force[k] = (epsilon)*((hx_b*hp*( ((1/4)*( f[0][0]+f[0][n_p-1] + 2*sum_fxj(f,0) + f[k][0]+f[k][n_p-1] + sum_fxj(f,k) )) +sum_f_sum_b(f,k)  )) + (-1)*( hx_a*hp*( (1/4)*((f[k][0]+f[k][n_p-1]+2*sum_fxj(f,k)) + (f[n_x-1][0]+f[n_x-1][n_p-1]+2*sum_fxj(f,n_x-1))) + sum_f_sum_a(f,k)))) ;
         }
     }
 }
@@ -206,7 +205,7 @@ void advection_p(double func_array[n_x][n_p], double func_one[n_x][n_p],double f
 {
     for (int j = 0; j < n_p; j++) {
         for (int i = 0; i < n_x; i++) {
-            func_one[i][j] = func_csp_p(func_array,p_values[j] + (force[i] * d_t),i,j);
+            func_one[i][j] = func_csp_p(func_array,p_values[j] - (force[i] * d_t),i,j);
         }
     }
 }
@@ -235,6 +234,10 @@ void test(double func_array[n_x][n_p], double func_one[n_x][n_p])
 }
 
 
+//-----------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 //-----------------------------------MAIN--------------------------------------------------------
 
 
@@ -244,61 +247,48 @@ int main()
     init_xvalues();//inicia los valores de x // SE RECOMIENDA CAMBIAR POR ALGUN CONSTRUCTOR Y NO INICIALIZAR
     init_pvalues();//inicia los valores de p  
     water_bag(main_func);// crea la funcion inicial
-        
-
-    // printf("main after loop %d \n" );
-    //     for (int i = 0; i < n_x; i++) {
-    //         for (int j = 0; j < n_p; j++) {
-    //         //cout << main_func[(i+1)%n_x][j];
-    //             printf("%f ", main_func[i][j]);
-    //     }
-    //     printf("\n");
-    // }   
 
     int loop=0;
-    for(int t = 0; t < 400; t++)
+    for(int t = 0; t < 2; t++)
     {
+   
         advection_x(main_func,func_one);// realiza el primer paso, first advetion in x.
-        test(func_one,main_func);
-        // reset(force);// resetea el array force
-        // integration(force,func_one);// realiza la integracion y la guarda en force
+        reset(force);// resetea el array force
+        integration(force,func_one);// realiza la integracion y la guarda en force
 
-        // advection_p(func_one,func_two,force);// realiza el segundo paso, second advetion in p.
-
-        // advection_x(func_two,main_func);// realiza el tercer paso, third advetion in x.
-
-        // // cout<<"func_one"<<func_one[n_x/2][n_p/2]<<endl;
-        // // cout<<"func_two"<<func_two[n_x/2][n_p/2]<<endl;
-        // // cout<<"main_func"<<main_func[n_x/2][n_p/2]<<endl;
-        // // loop++;
-        // // cout<<"---------------loop "<<loop<<endl;
+        advection_p(func_one,func_two,force);// realiza el segundo paso, second advetion in p.
+   
+        advection_x(func_two,main_func);// realiza el tercer paso, third advetion in x.
+        loop++;
     }
-  
+    
 
-
-
-
-
-    printf("main after loop %d \n" ,loop);
-     for (int i = 0; i < n_x; i++) {
-        for (int j = 0; j < n_p; j++) {
-            //cout << main_func[(i+1)%n_x][j];
-            printf("%f ", func_one[i][j]);
-        }
-        printf("\n");
-    }   
-
+    // printf("main after loop ");
+    //  for (int i = 0; i < n_x; i++) {
+    //     for (int j = 0; j < n_p; j++) {
+    //         //cout << main_func[(i+1)%n_x][j];
+    //         printf("%f ", main_func[i][j]);
+    //     }
+    //     printf("\n");
+    // }
 
     // cout<<"v_dxmaxima"<<(x_values[2]-x_values[1])/d_t <<endl; //velocidad maxima permitida en el programa dado Cheng 
 
+    ofstream archivo("main_func.txt");
 
-    // for (int i = 0; i < n_x; i++)
-    // {
-
-    //     cout<<force[i]<<endl;
-    // }
-    //cout<<force[4]<<endl;
-
+    if (archivo.is_open()) {
+        for (int i = 0; i < n_x; i++) {
+            for (int j = 0; j < n_p; j++) {
+                archivo << main_func[i][j] << " ";
+            }
+            archivo <<endl;  
+        }
+    }
+    else
+    {
+        cout << "No se pudo abrir el archivo" << endl;
+    }
+    archivo.close();
     
     return 0;
 }
